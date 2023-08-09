@@ -6,12 +6,14 @@ set -e
 
 show_help() {
     echo ""
-    echo " Usage: ./build-android <ndk-dir> -a [abi] -b [build-directory] -s [sdk-version]"
+    echo " Usage: ./build-android <ndk-dir> -a [abi] -b [build-directory] -s [sdk-version] -p [platform-version] -m [mechanisms]"
 
     echo "   ndk-dir: the directory of the Android NDK (required)"
     echo "   abi: the Android ABI to target for the build"
     echo "   build-directory: the directory in which to build the project"
     echo "   sdk-version: the minimum Android SDK version to target"
+    echo "   platform-version: -DANDROID_PLATFORM"
+    echo "   mechanisms: -DOQS_MINIMAL_BUILD"
     echo ""
     exit 0
 }
@@ -50,14 +52,18 @@ fi
 ABI="armeabi-v7a"
 MINSDKVERSION=21
 BUILDDIR="build"
+PLATFORM="android-21"
+MINBUILD="KEM_kyber_1024;"
 
 OPTIND=2
-while getopts "a:s:b:" flag
+while getopts "a:s:b:p:m:" flag
 do
     case $flag in
         a) ABI=$OPTARG;;
         s) MINSDKVERSION=$OPTARG;;
         b) BUILDDIR=$OPTARG;;
+        p) PLATFORM=$OPTARG;;
+        m) MINBUILD=$OPTARG;;
         *) exit 1
     esac
 done
@@ -104,11 +110,19 @@ echo "Building in directory $BUILDDIR"
 # Build
 mkdir "$BUILDDIR" && cd "$BUILDDIR"
 cmake .. -DOQS_USE_OPENSSL=OFF \
-         -DBUILD_SHARED_LIBS=ON  \
-         -DCMAKE_TOOLCHAIN_FILE="$NDK"/build/cmake/android.toolchain.cmake \
          -DANDROID_ABI="$ABI" \
+         -DANDROID_PLATFORM="$PLATFORM" \
+         -DCMAKE_BUILD_TYPE=Release \
+         -DBUILD_SHARED_LIBS=ON \
+         -DOQS_DIST_BUILD=ON \
+         -DOQS_MINIMAL_BUILD="$MINBUILD"  \
+         -DOQS_BUILD_ONLY_LIB=ON   \
+         -DCMAKE_TOOLCHAIN_FILE="$NDK"/build/cmake/android.toolchain.cmake \
          -DANDROID_NATIVE_API_LEVEL="$MINSDKVERSION"
 cmake --build ./
+
+# Copy built library to jniLibs directory
+cp -f "../build/lib/liboqs.so" "../../jniLibs/$ABI"
 
 # Provide rudimentary information following build
 echo "Completed build run for ABI $ABI, SDK Version $MINSDKVERSION"
