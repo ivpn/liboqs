@@ -127,6 +127,7 @@ FILE="../build/lib/liboqs.so"
 if [ -f "$FILE" ]; then
     echo "$FILE exists. Copying to jniLibs/$ABI"
     cp -f $FILE "../../jniLibs/$ABI"
+    exit 0
 fi
 
 # Provide rudimentary information following build
