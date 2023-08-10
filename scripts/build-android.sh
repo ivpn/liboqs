@@ -122,7 +122,12 @@ cmake .. -DOQS_USE_OPENSSL=OFF \
 cmake --build ./
 
 # Copy built library to jniLibs directory
-cp -f "../build/lib/liboqs.so" "../../jniLibs/$ABI"
+echo "Copy built library to jniLibs directory"
+FILE="../build/lib/liboqs.so"
+if [ -f "$FILE" ]; then
+    echo "$FILE exists. Copying to jniLibs/$ABI"
+    cp -f $FILE "../../jniLibs/$ABI"
+fi
 
 # Provide rudimentary information following build
 echo "Completed build run for ABI $ABI, SDK Version $MINSDKVERSION"
