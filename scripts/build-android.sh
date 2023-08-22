@@ -125,10 +125,9 @@ cmake --build ./
 echo "Copy built library to jniLibs directory"
 FILE="../build/lib/liboqs.so"
 if [ -f "$FILE" ]; then
-    echo "$FILE exists. Copying to jniLibs/$ABI"
     cp -f $FILE "../../jniLibs/$ABI"
-    exit 0
+    # echo "$FILE copied to jniLibs/$ABI"
 fi
 
 # Provide rudimentary information following build
-echo "Completed build run for ABI $ABI, SDK Version $MINSDKVERSION"
+# echo "Completed build run for ABI $ABI, SDK Version $MINSDKVERSION"
