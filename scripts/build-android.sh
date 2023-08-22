@@ -123,10 +123,13 @@ cmake --build ./
 
 # Copy built library to jniLibs directory
 echo "Copy built library to jniLibs directory"
-FILE="../build/lib/liboqs.so"
-if [ -f "$FILE" ]; then
-    cp -f $FILE "../../jniLibs/$ABI"
-    # echo "$FILE copied to jniLibs/$ABI"
+lib_file="../build/lib/liboqs.so"
+dest_dir="../../jniLibs/$ABI"
+if [ -f "$lib_file" ]; then
+    mkdir -p $dest_dir
+    chmod -R 755 $dest_dir
+    cp -f $lib_file $dest_dir
+    # echo "$lib_file copied to jniLibs/$ABI"
 fi
 
 # Provide rudimentary information following build
