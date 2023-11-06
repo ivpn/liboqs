@@ -84,10 +84,11 @@ void OQS_randombytes_system(uint8_t *random_array, size_t bytes_to_read) {
 	int status =
 	    SecRandomCopyBytes(kSecRandomDefault, bytes_to_read, random_array);
 
-	if (status == errSecSuccess) {
-		perror("OQS_randombytes");
-		exit(EXIT_FAILURE);
-	}
+	// TODO: Removed to resolve iOS app crash
+	// if (status == errSecSuccess) {
+	// 	perror("OQS_randombytes");
+	// 	exit(EXIT_FAILURE);
+	// }
 }
 #else
 void OQS_randombytes_system(uint8_t *random_array, size_t bytes_to_read) {
