@@ -11,7 +11,7 @@ NIST-developed software is expressly provided "AS IS." NIST MAKES NO WARRANTY OF
 You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
 */
 //  SPDX-License-Identifier: Unknown
-//  Modified for liboqs by Douglas Stebila
+//  Modified for liboqs by Douglas Stebila and Spencer Wilson
 //
 
 #include <assert.h>
@@ -19,11 +19,9 @@ You are solely responsible for determining the appropriateness of using and dist
 
 #include <oqs/common.h>
 #include <oqs/rand.h>
+#include <oqs/rand_nist.h>
 
 #ifdef OQS_USE_OPENSSL
-#include <openssl/conf.h>
-#include <openssl/evp.h>
-#include <openssl/err.h>
 #include "../ossl_helpers.h"
 #else
 #include <oqs/aes.h>
@@ -31,13 +29,7 @@ You are solely responsible for determining the appropriateness of using and dist
 
 void OQS_randombytes_nist_kat(unsigned char *x, size_t xlen);
 
-typedef struct {
-	unsigned char Key[32];
-	unsigned char V[16];
-	int reseed_counter;
-} AES256_CTR_DRBG_struct;
-
-static AES256_CTR_DRBG_struct DRBG_ctx;
+static OQS_NIST_DRBG_struct DRBG_ctx;
 static void AES256_CTR_DRBG_Update(unsigned char *provided_data, unsigned char *Key, unsigned char *V);
 
 #ifdef OQS_USE_OPENSSL
@@ -47,7 +39,7 @@ __declspec(noreturn)
 __attribute__((noreturn))
 # endif
 static void handleErrors(void) {
-	ERR_print_errors_fp(stderr);
+	OSSL_FUNC(ERR_print_errors_fp)(stderr);
 	abort();
 }
 #endif
@@ -63,20 +55,20 @@ static void AES256_ECB(unsigned char *key, unsigned char *ctr, unsigned char *bu
 	int len;
 
 	/* Create and initialise the context */
-	if (!(ctx = EVP_CIPHER_CTX_new())) {
+	if (!(ctx = OSSL_FUNC(EVP_CIPHER_CTX_new)())) {
 		handleErrors();
 	}
 
-	if (1 != EVP_EncryptInit_ex(ctx, oqs_aes_256_ecb(), NULL, key, NULL)) {
+	if (1 != OSSL_FUNC(EVP_EncryptInit_ex)(ctx, oqs_aes_256_ecb(), NULL, key, NULL)) {
 		handleErrors();
 	}
 
-	if (1 != EVP_EncryptUpdate(ctx, buffer, &len, ctr, 16)) {
+	if (1 != OSSL_FUNC(EVP_EncryptUpdate)(ctx, buffer, &len, ctr, 16)) {
 		handleErrors();
 	}
 
 	/* Clean up */
-	EVP_CIPHER_CTX_free(ctx);
+	OSSL_FUNC(EVP_CIPHER_CTX_free)(ctx);
 #else
 	void *schedule = NULL;
 	OQS_AES256_ECB_load_schedule(key, &schedule);
@@ -85,7 +77,7 @@ static void AES256_ECB(unsigned char *key, unsigned char *ctr, unsigned char *bu
 #endif
 }
 
-OQS_API void OQS_randombytes_nist_kat_init_256bit(const uint8_t *entropy_input, const uint8_t *personalization_string) {
+void OQS_randombytes_nist_kat_init_256bit(const uint8_t *entropy_input, const uint8_t *personalization_string) {
 	unsigned char seed_material[48];
 
 	memcpy(seed_material, entropy_input, 48);
@@ -125,6 +117,24 @@ void OQS_randombytes_nist_kat(unsigned char *x, size_t xlen) {
 	}
 	AES256_CTR_DRBG_Update(NULL, DRBG_ctx.Key, DRBG_ctx.V);
 	DRBG_ctx.reseed_counter++;
+}
+
+void OQS_randombytes_nist_kat_get_state(void *out) {
+	OQS_NIST_DRBG_struct *out_state = (OQS_NIST_DRBG_struct *)out;
+	if (out_state != NULL) {
+		memcpy(out_state->Key, DRBG_ctx.Key, sizeof(DRBG_ctx.Key));
+		memcpy(out_state->V, DRBG_ctx.V, sizeof(DRBG_ctx.V));
+		out_state->reseed_counter = DRBG_ctx.reseed_counter;
+	}
+}
+
+void OQS_randombytes_nist_kat_set_state(const void *in) {
+	const OQS_NIST_DRBG_struct *in_state = (const OQS_NIST_DRBG_struct *)in;
+	if (in_state != NULL) {
+		memcpy(DRBG_ctx.Key, in_state->Key, sizeof(DRBG_ctx.Key));
+		memcpy(DRBG_ctx.V, in_state->V, sizeof(DRBG_ctx.V));
+		DRBG_ctx.reseed_counter = in_state->reseed_counter;
+	}
 }
 
 static void AES256_CTR_DRBG_Update(unsigned char *provided_data, unsigned char *Key, unsigned char *V) {

@@ -13,31 +13,14 @@
 #include <sys/stat.h>
 
 #include <oqs/oqs.h>
+#include <oqs/rand_nist.h>
+#include <oqs/sha3.h>
+
+#include "test_helpers.h"
 
 #include "system_info.c"
 
-/* Displays hexadecimal strings */
-static void OQS_print_hex_string(const char *label, const uint8_t *str, size_t len) {
-	printf("%-20s (%4zu bytes):  ", label, len);
-	for (size_t i = 0; i < (len); i++) {
-		printf("%02X", str[i]);
-	}
-	printf("\n");
-}
-
-static void fprintBstr(FILE *fp, const char *S, const uint8_t *A, size_t L) {
-	size_t i;
-	fprintf(fp, "%s", S);
-	for (i = 0; i < L; i++) {
-		fprintf(fp, "%02X", A[i]);
-	}
-	if (L == 0) {
-		fprintf(fp, "00");
-	}
-	fprintf(fp, "\n");
-}
-
-static OQS_STATUS kem_kat(const char *method_name) {
+static OQS_STATUS kem_kat(const char *method_name, bool all) {
 
 	uint8_t entropy_input[48];
 	uint8_t seed[48];
@@ -50,6 +33,13 @@ static OQS_STATUS kem_kat(const char *method_name) {
 	uint8_t *shared_secret_d = NULL;
 	OQS_STATUS rc, ret = OQS_ERROR;
 	int rv;
+	size_t max_count;
+	OQS_KAT_PRNG *prng;
+
+	prng = OQS_KAT_PRNG_new(method_name);
+	if (prng == NULL) {
+		goto err;
+	}
 
 	kem = OQS_KEM_new(method_name);
 	if (kem == NULL) {
@@ -61,19 +51,9 @@ static OQS_STATUS kem_kat(const char *method_name) {
 		entropy_input[i] = i;
 	}
 
-	rc = OQS_randombytes_switch_algorithm(OQS_RAND_alg_nist_kat);
-	if (rc != OQS_SUCCESS) {
-		goto err;
-	}
-	OQS_randombytes_nist_kat_init_256bit(entropy_input, NULL);
+	OQS_KAT_PRNG_seed(prng, entropy_input, NULL);
 
 	fh = stdout;
-
-	fprintf(fh, "count = 0\n");
-	OQS_randombytes(seed, 48);
-	fprintBstr(fh, "seed = ", seed, 48);
-
-	OQS_randombytes_nist_kat_init_256bit(seed, NULL);
 
 	public_key = malloc(kem->length_public_key);
 	secret_key = malloc(kem->length_secret_key);
@@ -85,34 +65,52 @@ static OQS_STATUS kem_kat(const char *method_name) {
 		goto err;
 	}
 
-	rc = OQS_KEM_keypair(kem, public_key, secret_key);
-	if (rc != OQS_SUCCESS) {
-		fprintf(stderr, "[kat_kem] %s ERROR: OQS_KEM_keypair failed!\n", method_name);
-		goto err;
-	}
-	fprintBstr(fh, "pk = ", public_key, kem->length_public_key);
-	fprintBstr(fh, "sk = ", secret_key, kem->length_secret_key);
+	max_count = all ? prng->max_kats : 1;
 
-	rc = OQS_KEM_encaps(kem, ciphertext, shared_secret_e, public_key);
-	if (rc != OQS_SUCCESS) {
-		fprintf(stderr, "[kat_kem] %s ERROR: OQS_KEM_encaps failed!\n", method_name);
-		goto err;
-	}
-	fprintBstr(fh, "ct = ", ciphertext, kem->length_ciphertext);
-	fprintBstr(fh, "ss = ", shared_secret_e, kem->length_shared_secret);
+	for (size_t count = 0; count < max_count; ++count) {
+		fprintf(fh, "count = %zu\n", count);
+		OQS_randombytes(seed, 48);
+		OQS_fprintBstr(fh, "seed = ", seed, 48);
 
-	rc = OQS_KEM_decaps(kem, shared_secret_d, ciphertext, secret_key);
-	if (rc != OQS_SUCCESS) {
-		fprintf(stderr, "[kat_kem] %s ERROR: OQS_KEM_decaps failed!\n", method_name);
-		goto err;
-	}
+		OQS_KAT_PRNG_save_state(prng);
+		OQS_KAT_PRNG_seed(prng, seed, NULL);
 
-	rv = memcmp(shared_secret_e, shared_secret_d, kem->length_shared_secret);
-	if (rv != 0) {
-		fprintf(stderr, "[kat_kem] %s ERROR: shared secrets are not equal\n", method_name);
-		OQS_print_hex_string("shared_secret_e", shared_secret_e, kem->length_shared_secret);
-		OQS_print_hex_string("shared_secret_d", shared_secret_d, kem->length_shared_secret);
-		goto err;
+		rc = OQS_KEM_keypair(kem, public_key, secret_key);
+		if (rc != OQS_SUCCESS) {
+			fprintf(stderr, "[kat_kem] %s ERROR: OQS_KEM_keypair failed!\n", method_name);
+			goto err;
+		}
+		OQS_fprintBstr(fh, "pk = ", public_key, kem->length_public_key);
+		OQS_fprintBstr(fh, "sk = ", secret_key, kem->length_secret_key);
+
+		rc = OQS_KEM_encaps(kem, ciphertext, shared_secret_e, public_key);
+		if (rc != OQS_SUCCESS) {
+			fprintf(stderr, "[kat_kem] %s ERROR: OQS_KEM_encaps failed!\n", method_name);
+			goto err;
+		}
+		OQS_fprintBstr(fh, "ct = ", ciphertext, kem->length_ciphertext);
+		OQS_fprintBstr(fh, "ss = ", shared_secret_e, kem->length_shared_secret);
+
+		// The NIST program generates KAT response files with a trailing newline.
+		if (count != max_count - 1) {
+			fprintf(fh, "\n");
+		}
+
+		rc = OQS_KEM_decaps(kem, shared_secret_d, ciphertext, secret_key);
+		if (rc != OQS_SUCCESS) {
+			fprintf(stderr, "[kat_kem] %s ERROR: OQS_KEM_decaps failed!\n", method_name);
+			goto err;
+		}
+
+		rv = memcmp(shared_secret_e, shared_secret_d, kem->length_shared_secret);
+		if (rv != 0) {
+			fprintf(stderr, "[kat_kem] %s ERROR: shared secrets are not equal\n", method_name);
+			OQS_print_hex_string("shared_secret_e", shared_secret_e, kem->length_shared_secret);
+			OQS_print_hex_string("shared_secret_d", shared_secret_d, kem->length_shared_secret);
+			goto err;
+		}
+
+		OQS_KAT_PRNG_restore_state(prng);
 	}
 
 	ret = OQS_SUCCESS;
@@ -134,14 +132,15 @@ cleanup:
 	OQS_MEM_insecure_free(public_key);
 	OQS_MEM_insecure_free(ciphertext);
 	OQS_KEM_free(kem);
+	OQS_KAT_PRNG_free(prng);
 	return ret;
 }
 
 int main(int argc, char **argv) {
 
 	OQS_init();
-	if (argc != 2) {
-		fprintf(stderr, "Usage: kat_kem algname\n");
+	if (argc < 2 || argc > 3 || (argc == 3 && strcmp(argv[2], "--all"))) {
+		fprintf(stderr, "Usage: kat_kem algname [--all]\n");
 		fprintf(stderr, "  algname: ");
 		for (size_t i = 0; i < OQS_KEM_algs_length; i++) {
 			if (i > 0) {
@@ -157,7 +156,8 @@ int main(int argc, char **argv) {
 	}
 
 	char *alg_name = argv[1];
-	OQS_STATUS rc = kem_kat(alg_name);
+	bool all = (argc == 3);
+	OQS_STATUS rc = kem_kat(alg_name, all);
 	if (rc != OQS_SUCCESS) {
 		OQS_destroy();
 		return EXIT_FAILURE;

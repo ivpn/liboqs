@@ -18,6 +18,7 @@ The following options can be passed to CMake before the build file generation pr
 - [USE_SANITIZER](#USE_SANITIZER)
 - [OQS_ENABLE_TEST_CONSTANT_TIME](#OQS_ENABLE_TEST_CONSTANT_TIME)
 - [OQS_STRICT_WARNINGS](#OQS_STRICT_WARNINGS)
+- [OQS_EMBEDDED_BUILD](#OQS_EMBEDDED_BUILD)
 
 ## BUILD_SHARED_LIBS
 
@@ -47,7 +48,7 @@ Note: `ALG` in `OQS_ENABLE_KEM_ALG/OQS_ENABLE_SIG_ALG` should be replaced with t
 
 This can be set to `ON` or `OFF`, and is `ON` by default. When `OFF`, `ALG` and its code are excluded from the build process. When `ON`, made available are additional options whereby individual variants of `ALG` can be excluded from the build process. 
 
-For example: if `OQS_ENABLE_KEM_BIKE` is set to `ON`, the options `OQS_ENABLE_KEM_bike1_l1_cpa`, `OQS_ENABLE_KEM_bike1_l1_fo`, `OQS_ENABLE_KEM_bike1_l3_cpa`, `OQS_ENABLE_KEM_bike1_l3_fo` are made available (and are set to be `ON` by default). 
+For example: if `OQS_ENABLE_KEM_BIKE` is set to `ON`, the options `OQS_ENABLE_KEM_bike_l1`, `OQS_ENABLE_KEM_bike_l3`, and `OQS_ENABLE_KEM_bike_l5` are made available (and are set to be `ON` by default).
 
 For a full list of such options and their default values, consult [.CMake/alg_support.cmake](https://github.com/open-quantum-safe/liboqs/blob/master/.CMake/alg_support.cmake).
 
@@ -55,7 +56,9 @@ For a full list of such options and their default values, consult [.CMake/alg_su
 
 ## OQS_ALGS_ENABLED
 
-Selects algorithm set enabled. Possible values are "STD" selecting all algorithms standardized by NIST; "NIST_R4" selecting all algorithms evaluated in round 4 of the NIST PQC competition; "All" (or any other value) selecting all algorithms integrated into liboqs. Parameter setting "STD" minimizes library size but may require re-running code generator scripts in projects integrating `liboqs`, e.g., [oqs-openssl111](https://github.com/open-quantum-safe/openssl) or [oqs-openssh](https://github.com/open-quantum-safe/openssh).
+Selects algorithm set enabled. Possible values are "STD" selecting all algorithms standardized by NIST; "NIST_R4" selecting all algorithms evaluated in round 4 of the NIST PQC competition; "All" (or any other value) selecting all algorithms integrated into liboqs. Parameter setting "STD" minimizes library size but may require re-running code generator scripts in projects integrating `liboqs`; e.g., [oqs-provider](https://github.com/open-quantum-safe/oqs-provider) and [oqs-boringssl](https://github.com/open-quantum-safe/boringssl).
+
+**Attention**: If you use any predefined value (`STD` or `NIST_R4` as of now) for this variable, the values added via [OQS_ENABLE_KEM_ALG/OQS_ENABLE_SIG_ALG](#OQS_ENABLE_KEM_ALG/OQS_ENABLE_SIG_ALG) variables will be ignored.
 
 **Default**: `All`.
 
@@ -95,7 +98,7 @@ These can be set to `ON` or `OFF` and take an effect if liboqs is built for use 
 
 ## OQS_USE_OPENSSL
 
-In order to save size and limit the mount of different cryptographic code bases, it is possible to use OpenSSL as a crypto code provider by setting this configuration option.
+In order to save size and limit the amount of different cryptographic code bases, it is possible to use OpenSSL as a crypto code provider by setting this configuration option.
 
 This can be set to `ON` or `OFF`. When `ON`, the additional options `OQS_USE_AES_OPENSSL`, `OQS_USE_SHA2_OPENSSL`, and `OQS_USE_SHA3_OPENSSL` are made available to control whether liboqs uses OpenSSL's AES, SHA-2, and SHA-3 implementations.
 
@@ -106,9 +109,17 @@ By default,
 
 These default choices have been made in order to optimize the default performance of all algorithms. Changing them implies performance penalties.
 
-When `OQS_USE_OPENSSL` is `ON`, CMake also scans the filesystem to find the minimum version of OpenSSL required by liboqs (which happens to be 1.1.1). The `OPENSSL_ROOT_DIR` option can be set to aid CMake in its search.
+When `OQS_USE_OPENSSL` is `ON`, CMake also scans the filesystem to find the minimum version of OpenSSL required by liboqs (which happens to be 1.1.1). The [OPENSSL_ROOT_DIR](https://cmake.org/cmake/help/latest/module/FindOpenSSL.html) option can be set to aid CMake in its search.
 
 **Default**: `ON`.
+
+### OQS_DLOPEN_OPENSSL
+
+Dynamically load OpenSSL through `dlopen`. When using liboqs from other cryptographic libraries, hard dependency on OpenSSL is sometimes undesirable. If this option is `ON`, loading of OpenSSL will be deferred until any of the OpenSSL functions is used.
+
+Only has an effect if the system supports `dlopen` and ELF binary format, such as Linux or BSD family.
+
+**Default**: `OFF`.
 
 ## OQS_OPT_TARGET
 
@@ -155,4 +166,12 @@ Can be `ON` or `OFF`. When `ON`, all compiler warnings are enabled and treated a
 
 **Default**: `OFF`.
 
+## OQS_EMBEDDED_BUILD
 
+Can be `ON` or `OFF`. When `ON`, calls to standard library functions typically not present in a bare-metal embedded environment are excluded from compilation. 
+
+At the moment, this is **only** considered for random number generation, as both `getentropy()` and a file based `/dev/urandom` are not available on embedded targets (e.g. the Zephyr port).
+
+**Attention**: When this option is enabled, you have to supply a custom callback for obtaining random numbers using the `OQS_randombytes_custom_algorithm()` API before accessing the cryptographic API. Otherwise, all key generation and signing operations will fail. 
+
+**Default**: `OFF`.

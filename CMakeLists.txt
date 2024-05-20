@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.15)
 # option() honors normal variables.
 # see: https://cmake.org/cmake/help/git-stage/policy/CMP0077.html
 if(POLICY CMP0077)
@@ -18,7 +18,6 @@ if(POLICY CMP0067)
     cmake_policy(SET CMP0067 NEW)
 endif()
 
-
 project(liboqs C ASM)
 
 option(OQS_DIST_BUILD "Build distributable library with optimized code for several CPU microarchitectures. Enables run-time CPU feature detection." ON)
@@ -26,6 +25,7 @@ option(OQS_BUILD_ONLY_LIB "Build only liboqs and do not expose build targets for
 set(OQS_MINIMAL_BUILD "" CACHE STRING "Only build specifically listed algorithms.")
 option(OQS_PERMIT_UNSUPPORTED_ARCHITECTURE "Permit compilation on an an unsupported architecture." OFF)
 option(OQS_STRICT_WARNINGS "Enable all compiler warnings." OFF)
+option(OQS_EMBEDDED_BUILD "Compile liboqs for an Embedded environment without a full standard library." OFF)
 
 set(OQS_OPT_TARGET auto CACHE STRING "The target microarchitecture for optimization.")
 
@@ -33,7 +33,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(OQS_VERSION_TEXT "0.9.0-dev")
+set(OQS_VERSION_TEXT "0.10.1-dev")
 set(OQS_COMPILE_BUILD_TARGET "${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_HOST_SYSTEM}")
 set(OQS_MINIMAL_GCC_VERSION "7.1.0")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -86,6 +86,8 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "s390x")
     if(${OQS_DIST_BUILD})
         set(OQS_DIST_S390X_BUILD ON)
     endif()
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv")
+    set(ARCH "riscv")
 elseif(OQS_PERMIT_UNSUPPORTED_ARCHITECTURE)
     message(WARNING "Unknown or unsupported processor: " ${CMAKE_SYSTEM_PROCESSOR})
     message(WARNING "Compilation on an unsupported processor should only be used for testing, as it may result an insecure configuration, for example due to variable-time instructions leaking secret information.")
@@ -111,7 +113,7 @@ endif()
 
 option(OQS_SPEED_USE_ARM_PMU "Use ARM Performance Monitor Unit during benchmarking" OFF)
 
-if(WIN32)
+if(WIN32 AND NOT (MINGW OR MSYS OR CYGWIN))
     set(CMAKE_GENERATOR_CC cl)
 endif()
 
@@ -131,17 +133,33 @@ if(${OQS_USE_OPENSSL})
         endif()
     endif()
     find_package(OpenSSL 1.1.1 REQUIRED)
+
+    if(OQS_DLOPEN_OPENSSL)
+      find_program(OBJDUMP objdump)
+      if(NOT OBJDUMP)
+	message(FATAL_ERROR "objdump not found. Please install it from binutils.")
+      endif()
+      execute_process(
+	COMMAND ${OBJDUMP} -p ${OPENSSL_CRYPTO_LIBRARY}
+	COMMAND sed -n "s/[ 	]\\{1,\\}SONAME[ 	]\\{1,\\}//p"
+	OUTPUT_VARIABLE OQS_OPENSSL_CRYPTO_SONAME
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	COMMAND_ERROR_IS_FATAL ANY)
+      message(STATUS "OpenSSL dlopen SONAME: " ${OQS_OPENSSL_CRYPTO_SONAME})
+    endif()
 endif()
 
 set(PUBLIC_HEADERS ${PROJECT_SOURCE_DIR}/src/oqs.h
                    ${PROJECT_SOURCE_DIR}/src/common/common.h
                    ${PROJECT_SOURCE_DIR}/src/common/rand/rand.h
-                   ${PROJECT_SOURCE_DIR}/src/common/aes/aes.h
-                   ${PROJECT_SOURCE_DIR}/src/common/sha2/sha2.h
-                   ${PROJECT_SOURCE_DIR}/src/common/sha3/sha3.h
-                   ${PROJECT_SOURCE_DIR}/src/common/sha3/sha3x4.h
                    ${PROJECT_SOURCE_DIR}/src/kem/kem.h
                    ${PROJECT_SOURCE_DIR}/src/sig/sig.h)
+
+set(INTERNAL_HEADERS ${PROJECT_SOURCE_DIR}/src/common/aes/aes.h
+                     ${PROJECT_SOURCE_DIR}/src/common/rand/rand_nist.h
+                     ${PROJECT_SOURCE_DIR}/src/common/sha2/sha2.h
+                     ${PROJECT_SOURCE_DIR}/src/common/sha3/sha3.h
+                     ${PROJECT_SOURCE_DIR}/src/common/sha3/sha3x4.h)
 
 if(${OQS_ENABLE_KEM_BIKE})
     set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_SOURCE_DIR}/src/kem/bike/kem_bike.h)
@@ -162,8 +180,14 @@ endif()
 if(OQS_ENABLE_KEM_KYBER)
     set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_SOURCE_DIR}/src/kem/kyber/kem_kyber.h)
 endif()
+if(OQS_ENABLE_KEM_ML_KEM)
+    set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_SOURCE_DIR}/src/kem/ml_kem/kem_ml_kem.h)
+endif()
 if(OQS_ENABLE_SIG_DILITHIUM)
     set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_SOURCE_DIR}/src/sig/dilithium/sig_dilithium.h)
+endif()
+if(OQS_ENABLE_SIG_ML_DSA)
+    set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_SOURCE_DIR}/src/sig/ml_dsa/sig_ml_dsa.h)
 endif()
 if(OQS_ENABLE_SIG_FALCON)
     set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_SOURCE_DIR}/src/sig/falcon/sig_falcon.h)
@@ -174,6 +198,7 @@ endif()
 ##### OQS_COPY_FROM_UPSTREAM_FRAGMENT_INCLUDE_HEADERS_END
 execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/include/oqs)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PUBLIC_HEADERS} ${PROJECT_BINARY_DIR}/include/oqs)
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${INTERNAL_HEADERS} ${PROJECT_BINARY_DIR}/include/oqs)
 configure_file(src/oqsconfig.h.cmake ${PROJECT_BINARY_DIR}/include/oqs/oqsconfig.h)
 set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_BINARY_DIR}/include/oqs/oqsconfig.h)
 
@@ -215,3 +240,15 @@ endif()
 
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "www.openquantumsafe.org")
 include(CPack)
+
+# uninstall target
+if(NOT TARGET uninstall)
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/.CMake/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+
+  add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif()
+

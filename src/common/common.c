@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(OQS_DIST_BUILD) && defined(OQS_USE_PTHREADS)
+#include <pthread.h>
+#endif
+
 #if !defined(OQS_HAVE_POSIX_MEMALIGN) || defined(__MINGW32__) || defined(__MINGW64__) || defined(_MSC_VER)
 #include <malloc.h>
 #endif
@@ -22,14 +26,15 @@
 #endif
 
 #if defined(OQS_USE_OPENSSL)
-#include <openssl/evp.h>
 #include "ossl_helpers.h"
-CRYPTO_ONCE OQS_ONCE_STATIC_FREE;
 #endif
 
 /* Identifying the CPU is expensive so we cache the results in cpu_ext_data */
 #if defined(OQS_DIST_BUILD)
 static unsigned int cpu_ext_data[OQS_CPU_EXT_COUNT] = {0};
+#if defined(OQS_USE_PTHREADS)
+static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+#endif
 #endif
 
 #if defined(OQS_DIST_X86_64_BUILD)
@@ -134,6 +139,20 @@ static void set_available_cpu_extensions(void) {
 	}
 #endif
 }
+#elif defined(_WIN32)
+static void set_available_cpu_extensions(void) {
+	/* mark that this function has been called */
+	cpu_ext_data[OQS_CPU_EXT_INIT] = 1;
+	BOOL crypto = IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
+	if (crypto) {
+		cpu_ext_data[OQS_CPU_EXT_ARM_AES] = 1;
+		cpu_ext_data[OQS_CPU_EXT_ARM_SHA2] = 1;
+	}
+	BOOL neon = IsProcessorFeaturePresent(PF_ARM_VFP_32_REGISTERS_AVAILABLE);
+	if (neon) {
+		cpu_ext_data[OQS_CPU_EXT_ARM_NEON] = 1;
+	}
+}
 #else
 #include <sys/auxv.h>
 #include <asm/hwcap.h>
@@ -192,9 +211,13 @@ static void set_available_cpu_extensions(void) {
 
 OQS_API int OQS_CPU_has_extension(OQS_CPU_EXT ext) {
 #if defined(OQS_DIST_BUILD)
+#if defined(OQS_USE_PTHREADS)
+	pthread_once(&once_control, &set_available_cpu_extensions);
+#else
 	if (0 == cpu_ext_data[OQS_CPU_EXT_INIT]) {
 		set_available_cpu_extensions();
 	}
+#endif
 	if (0 < ext && ext < OQS_CPU_EXT_COUNT) {
 		return (int)cpu_ext_data[ext];
 	}
@@ -208,7 +231,6 @@ OQS_API void OQS_init(void) {
 #if defined(OQS_DIST_BUILD)
 	OQS_CPU_has_extension(OQS_CPU_EXT_INIT);
 #endif
-	return;
 }
 
 OQS_API const char *OQS_version(void) {
@@ -217,9 +239,8 @@ OQS_API const char *OQS_version(void) {
 
 OQS_API void OQS_destroy(void) {
 #if defined(OQS_USE_OPENSSL)
-	CRYPTO_THREAD_run_once(&OQS_ONCE_STATIC_FREE, oqs_free_ossl_objects);
+	oqs_ossl_destroy();
 #endif
-	return;
 }
 
 OQS_API int OQS_MEM_secure_bcmp(const void *a, const void *b, size_t len) {

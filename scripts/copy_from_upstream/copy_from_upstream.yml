@@ -1,23 +1,42 @@
 upstreams:
   -
-    name: pqclean
+    name: oldpqclean
     git_url: https://github.com/PQClean/PQClean.git
     git_branch: master
-    git_commit: 66e50172055aaf1b9a16d8f35fe03b0807f2723e
+    git_commit: 8e220a87308154d48fdfac40abbb191ac7fce06a
     kem_meta_path: 'crypto_kem/{pqclean_scheme}/META.yml'
     sig_meta_path: 'crypto_sign/{pqclean_scheme}/META.yml'
     kem_scheme_path: 'crypto_kem/{pqclean_scheme}'
     sig_scheme_path: 'crypto_sign/{pqclean_scheme}'
-    patches: [pqclean-sphincs.patch, pqclean-dilithium-arm-randomized-signing.patch, pqclean-dilithium-symbolnames.patch, pqclean-kyber-armneon-shake-fixes.patch, pqclean-kyber-armneon-768-1024-fixes.patch, pqclean-classicmceliece.patch]
+    patches: [pqclean-dilithium-arm-randomized-signing.patch, pqclean-kyber-armneon-shake-fixes.patch, pqclean-kyber-armneon-768-1024-fixes.patch, pqclean-kyber-armneon-variable-timing-fix.patch]
     ignore: pqclean_sphincs-shake-256s-simple_aarch64, pqclean_sphincs-shake-256s-simple_aarch64, pqclean_sphincs-shake-256f-simple_aarch64, pqclean_sphincs-shake-192s-simple_aarch64, pqclean_sphincs-shake-192f-simple_aarch64, pqclean_sphincs-shake-128s-simple_aarch64, pqclean_sphincs-shake-128f-simple_aarch64
+  -
+    name: pqclean
+    git_url: https://github.com/PQClean/PQClean.git
+    git_branch: master
+    git_commit: 8e221ae797b229858a0b0d784577a8cb149d5789
+    kem_meta_path: 'crypto_kem/{pqclean_scheme}/META.yml'
+    sig_meta_path: 'crypto_sign/{pqclean_scheme}/META.yml'
+    kem_scheme_path: 'crypto_kem/{pqclean_scheme}'
+    sig_scheme_path: 'crypto_sign/{pqclean_scheme}'
+    patches: [pqclean-sphincs.patch]
+    ignore: pqclean_sphincs-shake-256s-simple_aarch64, pqclean_sphincs-shake-256s-simple_aarch64, pqclean_sphincs-shake-256f-simple_aarch64, pqclean_sphincs-shake-192s-simple_aarch64, pqclean_sphincs-shake-192f-simple_aarch64, pqclean_sphincs-shake-128s-simple_aarch64, pqclean_sphincs-shake-128f-simple_aarch64, pqclean_kyber512_aarch64, pqclean_kyber1024_aarch64, pqclean_kyber768_aarch64, pqclean_dilithium2_aarch64, pqclean_dilithium3_aarch64, pqclean_dilithium5_aarch64
   -
     name: pqcrystals-kyber
     git_url: https://github.com/pq-crystals/kyber.git
     git_branch: master
-    git_commit: 518de2414a85052bb91349bcbcc347f391292d5b
+    git_commit: b628ba78711bc28327dc7d2d5c074a00f061884e
     kem_meta_path: '{pretty_name_full}_META.yml'
     kem_scheme_path: '.'
     patches: [pqcrystals-kyber-yml.patch, pqcrystals-kyber-ref-shake-aes.patch, pqcrystals-kyber-avx2-shake-aes.patch]
+  -
+    name: pqcrystals-kyber-standard
+    git_url: https://github.com/pq-crystals/kyber.git
+    git_branch: standard
+    git_commit: 11d00ff1f20cfca1f72d819e5a45165c1e0a2816
+    kem_meta_path: '{pretty_name_full}_META.yml'
+    kem_scheme_path: '.'
+    patches: [pqcrystals-ml_kem_ipd.patch]
   -
     name: pqcrystals-dilithium
     git_url: https://github.com/pq-crystals/dilithium.git
@@ -26,6 +45,14 @@ upstreams:
     sig_meta_path: '{pretty_name_full}_META.yml'
     sig_scheme_path: '.'
     patches: [pqcrystals-dilithium-yml.patch, pqcrystals-dilithium-ref-shake-aes.patch, pqcrystals-dilithium-avx2-shake-aes.patch]
+  -
+    name: pqcrystals-dilithium-standard
+    git_url: https://github.com/pq-crystals/dilithium.git
+    git_branch: standard
+    git_commit: e7bed6258b9a3703ce78d4ec38021c86382ce31c
+    sig_meta_path: '{pretty_name_full}_META.yml'
+    sig_scheme_path: '.'
+    patches: [pqcrystals-ml_dsa_ipd.patch]
 kems:
   -
     name: classic_mceliece
@@ -79,15 +106,15 @@ kems:
     schemes:
       -
         scheme: "128"
-        pqclean_scheme: hqc-rmrs-128
+        pqclean_scheme: hqc-128
         pretty_name_full: HQC-128
       -
         scheme: "192"
-        pqclean_scheme: hqc-rmrs-192
+        pqclean_scheme: hqc-192
         pretty_name_full: HQC-192
       -
         scheme: "256"
-        pqclean_scheme: hqc-rmrs-256
+        pqclean_scheme: hqc-256
         pretty_name_full: HQC-256
   -
     name: kyber
@@ -96,7 +123,7 @@ kems:
                                       aarch64: aarch64
     upstream_location: pqcrystals-kyber
     arch_specific_upstream_locations:
-                                      aarch64: pqclean
+                                      aarch64: oldpqclean
     schemes:
       -
         scheme: "512"
@@ -110,6 +137,29 @@ kems:
         scheme: "1024"
         pqclean_scheme: kyber1024
         pretty_name_full: Kyber1024
+  -
+    name: ml_kem
+    default_implementation: ref
+    upstream_location: pqcrystals-kyber-standard
+    schemes:
+      -
+        scheme: "512_ipd"
+        pqclean_scheme: ml-kem-512-ipd
+        pretty_name_full: ML-KEM-512-ipd
+        alias_scheme: "512"
+        alias_pretty_name_full: ML-KEM-512
+      -
+        scheme: "768_ipd"
+        pqclean_scheme: ml-kem-768-ipd
+        pretty_name_full: ML-KEM-768-ipd
+        alias_scheme: "768"
+        alias_pretty_name_full: ML-KEM-768
+      -
+        scheme: "1024_ipd"
+        pqclean_scheme: ml-kem-1024-ipd
+        pretty_name_full: ML-KEM-1024-ipd
+        alias_scheme: "1024"
+        alias_pretty_name_full: ML-KEM-1024
 sigs:
   -
     name: dilithium
@@ -118,7 +168,7 @@ sigs:
     arch_specific_implementations:
                                       aarch64: aarch64
     arch_specific_upstream_locations:
-                                      aarch64: pqclean
+                                      aarch64: oldpqclean
     schemes:
       -
         scheme: "2"
@@ -136,6 +186,32 @@ sigs:
         pretty_name_full: Dilithium5
         signed_msg_order: sig_then_msg
   -
+    name: ml_dsa
+    default_implementation: ref
+    upstream_location: pqcrystals-dilithium-standard
+    schemes:
+      -
+        scheme: "44_ipd"
+        pqclean_scheme: ml-dsa-44-ipd
+        pretty_name_full: ML-DSA-44-ipd
+        signed_msg_order: sig_then_msg
+        alias_scheme: "44"
+        alias_pretty_name_full: ML-DSA-44
+      -
+        scheme: "65_ipd"
+        pqclean_scheme: ml-dsa-65-ipd
+        pretty_name_full: ML-DSA-65-ipd
+        signed_msg_order: sig_then_msg
+        alias_scheme: "65"
+        alias_pretty_name_full: ML-DSA-65
+      -
+        scheme: "87_ipd"
+        pqclean_scheme: ml-dsa-87-ipd
+        pretty_name_full: ML-DSA-87-ipd
+        signed_msg_order: sig_then_msg
+        alias_scheme: "87"
+        alias_pretty_name_full: ML-DSA-87
+  -
     name: falcon
     default_implementation: clean
     upstream_location: pqclean
@@ -150,6 +226,16 @@ sigs:
         pqclean_scheme: falcon-1024
         pretty_name_full: Falcon-1024
         signed_msg_order: falcon
+      -
+        scheme: "padded_512"
+        pqclean_scheme: falcon-padded-512
+        pretty_name_full: Falcon-padded-512
+        signed_msg_order: sig_then_msg
+      -
+        scheme: "padded_1024"
+        pqclean_scheme: falcon-padded-1024
+        pretty_name_full: Falcon-padded-1024
+        signed_msg_order: sig_then_msg
   -
     name: sphincs
     default_implementation: clean

@@ -19,10 +19,11 @@ primary-upstream:
     with copy_from_upstream patches
   spdx-license-identifier: CC0-1.0 or Apache-2.0
 optimized-upstreams:
-  pqclean-aarch64:
-    source: https://github.com/PQClean/PQClean/commit/66e50172055aaf1b9a16d8f35fe03b0807f2723e
+  oldpqclean-aarch64:
+    source: https://github.com/PQClean/PQClean/commit/8e220a87308154d48fdfac40abbb191ac7fce06a
       with copy_from_upstream patches
-    spdx-license-identifier: CC0-1.0 and (CC0-1.0 or Apache-2.0) and (CC0-1.0 or MIT) and MIT
+    spdx-license-identifier: CC0-1.0 and (CC0-1.0 or Apache-2.0) and (CC0-1.0 or MIT)
+      and MIT
 parameter-sets:
 - name: Dilithium2
   oqs_alg: OQS_SIG_alg_dilithium_2
@@ -56,7 +57,7 @@ parameter-sets:
     no-secret-dependent-branching-claimed: true
     no-secret-dependent-branching-checked-by-valgrind: true
     large-stack-usage: false
-  - upstream: pqclean-aarch64
+  - upstream: oldpqclean-aarch64
     upstream-id: aarch64
     supported-platforms:
     - architecture: ARM64_V8
@@ -100,7 +101,7 @@ parameter-sets:
     no-secret-dependent-branching-claimed: true
     no-secret-dependent-branching-checked-by-valgrind: true
     large-stack-usage: false
-  - upstream: pqclean-aarch64
+  - upstream: oldpqclean-aarch64
     upstream-id: aarch64
     supported-platforms:
     - architecture: ARM64_V8
@@ -144,7 +145,7 @@ parameter-sets:
     no-secret-dependent-branching-claimed: true
     no-secret-dependent-branching-checked-by-valgrind: true
     large-stack-usage: false
-  - upstream: pqclean-aarch64
+  - upstream: oldpqclean-aarch64
     upstream-id: aarch64
     supported-platforms:
     - architecture: ARM64_V8
