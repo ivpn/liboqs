@@ -17,14 +17,15 @@ website: https://pq-crystals.org/
 nist-round: 3
 spec-version: NIST Round 3 submission
 primary-upstream:
-  source: https://github.com/pq-crystals/kyber/commit/518de2414a85052bb91349bcbcc347f391292d5b
+  source: https://github.com/pq-crystals/kyber/commit/b628ba78711bc28327dc7d2d5c074a00f061884e
     with copy_from_upstream patches
   spdx-license-identifier: CC0-1.0 or Apache-2.0
 optimized-upstreams:
-  pqclean-aarch64:
-    source: https://github.com/PQClean/PQClean/commit/66e50172055aaf1b9a16d8f35fe03b0807f2723e
+  oldpqclean-aarch64:
+    source: https://github.com/PQClean/PQClean/commit/8e220a87308154d48fdfac40abbb191ac7fce06a
       with copy_from_upstream patches
-    spdx-license-identifier: CC0-1.0 and (CC0-1.0 or Apache-2.0) and (CC0-1.0 or MIT) and MIT
+    spdx-license-identifier: CC0-1.0 and (CC0-1.0 or Apache-2.0) and (CC0-1.0 or MIT)
+      and MIT
 parameter-sets:
 - name: Kyber512
   claimed-nist-level: 1
@@ -59,7 +60,7 @@ parameter-sets:
     no-secret-dependent-branching-claimed: true
     no-secret-dependent-branching-checked-by-valgrind: true
     large-stack-usage: false
-  - upstream: pqclean-aarch64
+  - upstream: oldpqclean-aarch64
     upstream-id: aarch64
     supported-platforms:
     - architecture: ARM64_V8
@@ -104,7 +105,7 @@ parameter-sets:
     no-secret-dependent-branching-claimed: true
     no-secret-dependent-branching-checked-by-valgrind: true
     large-stack-usage: false
-  - upstream: pqclean-aarch64
+  - upstream: oldpqclean-aarch64
     upstream-id: aarch64
     supported-platforms:
     - architecture: ARM64_V8
@@ -149,7 +150,7 @@ parameter-sets:
     no-secret-dependent-branching-claimed: true
     no-secret-dependent-branching-checked-by-valgrind: true
     large-stack-usage: false
-  - upstream: pqclean-aarch64
+  - upstream: oldpqclean-aarch64
     upstream-id: aarch64
     supported-platforms:
     - architecture: ARM64_V8

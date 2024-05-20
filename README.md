@@ -1,22 +1,26 @@
-[AppVeyor](https://ci.appveyor.com/project/dstebila/liboqs): ![Build status image](https://ci.appveyor.com/api/projects/status/9d2ts78x88r8wnii/branch/main?svg=true), [CircleCI](https://circleci.com/gh/open-quantum-safe/liboqs/tree/main): ![Build status image](https://circleci.com/gh/open-quantum-safe/liboqs/tree/main.svg?style=svg), [TravisCI](https://travis-ci.com/github/open-quantum-safe/liboqs): [![Build Status](https://travis-ci.com/open-quantum-safe/liboqs.svg?branch=main)](https://travis-ci.com/open-quantum-safe/liboqs)
+[CircleCI](https://circleci.com/gh/open-quantum-safe/liboqs/tree/main): ![Build status image](https://circleci.com/gh/open-quantum-safe/liboqs/tree/main.svg?style=svg), [TravisCI](https://travis-ci.com/github/open-quantum-safe/liboqs): [![Build Status](https://travis-ci.com/open-quantum-safe/liboqs.svg?branch=main)](https://travis-ci.com/open-quantum-safe/liboqs)
 
 liboqs
 ======================
 
 liboqs is an open source C library for quantum-safe cryptographic algorithms.
 
-- [Overview](#overview)
-- [Status](#status)
-  * [Supported algorithms](#supported-algorithms)
-  * [Limitations and Security](#limitations-and-security)
-- [Quickstart](#quickstart)
-  * [Linux / macOS](#linuxmacOS)
-  * [Windows](#windows)
-  * [Cross compilation](#cross-compilation)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements](#acknowledgements)
+- [liboqs](#liboqs)
+	- [Overview](#overview)
+	- [Status](#status)
+		- [Supported Algorithms](#supported-algorithms)
+			- [Key encapsulation mechanisms](#key-encapsulation-mechanisms)
+			- [Signature schemes](#signature-schemes)
+		- [Limitations and Security](#limitations-and-security)
+			- [Platform limitations](#platform-limitations)
+	- [Quickstart](#quickstart)
+		- [Linux and Mac](#linux-and-mac)
+		- [Windows](#windows)
+		- [Cross compilation](#cross-compilation)
+	- [Documentation](#documentation)
+	- [Contributing](#contributing)
+	- [License](#license)
+	- [Acknowledgements](#acknowledgements)
 
 ## Overview
 
@@ -26,9 +30,9 @@ liboqs provides:
 - a common API for these algorithms
 - a test harness and benchmarking routines
 
-liboqs is part of the **Open Quantum Safe (OQS)** project led by [Douglas Stebila](https://www.douglas.stebila.ca/research/) and [Michele Mosca](http://faculty.iqc.uwaterloo.ca/mmosca/), which aims to develop and integrate into applications quantum-safe cryptography to facilitate deployment and testing in real world contexts. In particular, OQS provides prototype integrations of liboqs into TLS and SSH, through [OpenSSL](https://github.com/open-quantum-safe/openssl) and [OpenSSH](https://github.com/open-quantum-safe/openssh-portable).
+liboqs is part of the **Open Quantum Safe (OQS)** project, which aims to develop and integrate into applications quantum-safe cryptography to facilitate deployment and testing in real world contexts. In particular, OQS provides prototype integrations of liboqs into protocols like TLS, X.509, and S/MIME, through our [OpenSSL 3 Provider](https://github.com/open-quantum-safe/oqs-provider) and we provide a variety of other [post-quantum-enabled demos](https://github.com/open-quantum-safe/oqs-demos).
 
-More information on OQS can be found [here](https://openquantumsafe.org/) and in the [associated](https://openquantumsafe.org/papers/SAC-SteMos16.pdf) [whitepapers](https://openquantumsafe.org/papers/NISTPQC-CroPaqSte19.pdf).
+The OQS project is supported by the [Post-Quantum Cryptography Alliance](https://pqca.org/) as part of the [Linux Foundation](https://linuxfoundation.org/). More information about the Open Quantum Safe project can be found at [openquantumsafe.org](https://openquantumsafe.org/).
 
 ## Status
 
@@ -36,7 +40,13 @@ More information on OQS can be found [here](https://openquantumsafe.org/) and in
 
 Details on each supported algorithm can be found in the [docs/algorithms](https://github.com/open-quantum-safe/liboqs/tree/main/docs/algorithms) folder.
 
-The list below indicates all algorithms supported by liboqs, but not all those algorithms have been selected for standardization by NIST, specifically Kyber (excluding the "-90s" variants), Dilithium (excluding the "-AES" variants), Falcon, and SPHINCS+ (excluding the "robust" variants). Activating only those standardized algorithms for use in `liboqs` can be facilitated by setting the [OQS_ALGS_ENABLED](CONFIGURE.md#oqs_algs_enabled) build configuration variable to `STD`. By default `liboqs` is built supporting all, incl. experimental, PQ algorithms listed below.
+The list below indicates all algorithms currently supported by liboqs, including experimental algorithms and already excluding algorithm variants pruned during the NIST competition, such as Kyber-90s or Dilithium-AES.
+
+The only algorithms in `liboqs` that implement NIST standards drafts are the [`ML-KEM`](https://csrc.nist.gov/pubs/fips/203/ipd) and [`ML-DSA`](https://csrc.nist.gov/pubs/fips/204/ipd) variants with their respective different bit strengths. `liboqs` will retain these algorithm names selected by NIST throughout the finishing stages of the standardization process, so users can rely on their presence going forward. If NIST changes the implementation details of these algorithms, `liboqs` will adjust the implementation so that users are protected from such potential changes. For users interested in explicitly selecting the current "proposed draft standard" code, the variants with the suffix "-ipd" are made available. At this stage, "ml-kem-ipd" and "ml-kem" as well as "ml-dsa-ipd" and "ml-dsa" are functionally equivalent, denoted by the "alias" moniker below.
+
+Falcon and SPHINCS+ have also been [selected for standardization](https://csrc.nist.gov/Projects/post-quantum-cryptography/selected-algorithms-2022), but the `liboqs` implementations of these algorithms are currently tracking Round 3 submissions and not NIST standards drafts.
+
+All names other than `ML-KEM` and `ML-DSA` are subject to change. `liboqs` makes available a [selection mechanism for algorithms on the NIST standards track, continued NIST competition, or purely experimental nature by way of the configuration variable OQS_ALGS_ENABLED](CONFIGURE.md#oqs_algs_enabled). By default `liboqs` is built supporting all, incl. experimental, PQ algorithms listed below.
 
 #### Key encapsulation mechanisms
 
@@ -44,8 +54,9 @@ The list below indicates all algorithms supported by liboqs, but not all those a
 - **BIKE**: BIKE-L1, BIKE-L3, BIKE-L5
 - **Classic McEliece**: Classic-McEliece-348864†, Classic-McEliece-348864f†, Classic-McEliece-460896†, Classic-McEliece-460896f†, Classic-McEliece-6688128†, Classic-McEliece-6688128f†, Classic-McEliece-6960119†, Classic-McEliece-6960119f†, Classic-McEliece-8192128†, Classic-McEliece-8192128f†
 - **FrodoKEM**: FrodoKEM-640-AES, FrodoKEM-640-SHAKE, FrodoKEM-976-AES, FrodoKEM-976-SHAKE, FrodoKEM-1344-AES, FrodoKEM-1344-SHAKE
-- **HQC**: HQC-128, HQC-192, HQC-256†
+- **HQC**: HQC-128, HQC-192, HQC-256
 - **Kyber**: Kyber512, Kyber768, Kyber1024
+- **ML-KEM**: ML-KEM-512-ipd (alias: ML-KEM-512), ML-KEM-768-ipd (alias: ML-KEM-768), ML-KEM-1024-ipd (alias: ML-KEM-1024)
 - **NTRU-Prime**: sntrup761
 <!--- OQS_TEMPLATE_FRAGMENT_LIST_KEXS_END -->
 
@@ -53,7 +64,8 @@ The list below indicates all algorithms supported by liboqs, but not all those a
 
 <!--- OQS_TEMPLATE_FRAGMENT_LIST_SIGS_START -->
 - **CRYSTALS-Dilithium**: Dilithium2, Dilithium3, Dilithium5
-- **Falcon**: Falcon-512, Falcon-1024
+- **Falcon**: Falcon-512, Falcon-1024, Falcon-padded-512, Falcon-padded-1024
+- **ML-DSA**: ML-DSA-44-ipd (alias: ML-DSA-44), ML-DSA-65-ipd (alias: ML-DSA-65), ML-DSA-87-ipd (alias: ML-DSA-87)
 - **SPHINCS+-SHA2**: SPHINCS+-SHA2-128f-simple, SPHINCS+-SHA2-128s-simple, SPHINCS+-SHA2-192f-simple, SPHINCS+-SHA2-192s-simple, SPHINCS+-SHA2-256f-simple, SPHINCS+-SHA2-256s-simple
 - **SPHINCS+-SHAKE**: SPHINCS+-SHAKE-128f-simple, SPHINCS+-SHAKE-128s-simple, SPHINCS+-SHAKE-192f-simple, SPHINCS+-SHAKE-192s-simple, SPHINCS+-SHAKE-256f-simple, SPHINCS+-SHAKE-256s-simple
 <!--- OQS_TEMPLATE_FRAGMENT_LIST_SIGS_END -->
@@ -78,7 +90,7 @@ In order to optimize support effort,
 
 ## Quickstart
 
-### Linux/macOS
+### Linux and Mac
 
 1. Install dependencies:
 
@@ -88,10 +100,10 @@ In order to optimize support effort,
 
 	On macOS, using a package manager of your choice (we've picked Homebrew):
 
-		brew install cmake ninja openssl@1.1 wget doxygen graphviz astyle valgrind
+		brew install cmake ninja openssl@3 wget doxygen graphviz astyle valgrind
 		pip3 install pytest pytest-xdist pyyaml
 
-	Note that, if you want liboqs to use OpenSSL for various symmetric crypto algorithms (AES, SHA-2, etc.) then you must have OpenSSL version 1.1.1 or higher.
+	Note that, if you want liboqs to use OpenSSL for various symmetric crypto algorithms (AES, SHA-2, etc.) then you must have OpenSSL installed (version 3.x recommended; EOL version 1.1.1 also still possible).
 
 2. Get the source:
 
@@ -104,7 +116,7 @@ In order to optimize support effort,
 		cmake -GNinja ..
 		ninja
 
-Various `cmake` build options to customize the resultant artifacts are available and are [documented in CONFIGURE.md](CONFIGURE.md). All supported options are also listed in the `.CMake/alg-support.cmake` file, and can be viewed by running `cmake -LAH ..` in the `build` directory.
+Various `cmake` build options to customize the resultant artifacts are available and are [documented in CONFIGURE.md](CONFIGURE.md#options-for-configuring-liboqs-builds). All supported options are also listed in the `.CMake/alg-support.cmake` file, and can be viewed by running `cmake -LAH ..` in the `build` directory.
 
 The following instructions assume we are in `build`.
 
@@ -134,6 +146,8 @@ The following instructions assume we are in `build`.
 	Then open `docs/html/index.html` in your web browser.
 
 4. `ninja install` can be run to install the built library and `include` files to a location of choice, which can be specified by passing the `-DCMAKE_INSTALL_PREFIX=<dir>` option to `cmake` at configure time. Alternatively, `ninja package` can be run to create an install package.
+
+5. `ninja uninstall` can be run to remove all installation files.
 
 
 ### Windows
@@ -174,14 +188,19 @@ liboqs includes some third party libraries or modules that are licensed differen
 - `src/kem/classic_mceliece/pqclean_*`: public domain
 - `src/kem/kyber/pqcrystals-*`: public domain (CC0) or Apache License v2.0
 - `src/kem/kyber/pqclean_*`: public domain (CC0), and public domain (CC0) or Apache License v2.0, and public domain (CC0) or MIT, and MIT
+- `src/kem/ml_kem/pqcrystals-*`: public domain (CC0) or Apache License v2.0
 - `src/sig/dilithium/pqcrystals-*`: public domain (CC0) or Apache License v2.0
 - `src/sig/dilithium/pqclean_*`: public domain (CC0), and public domain (CC0) or Apache License v2.0, and public domain (CC0) or MIT, and MIT
+-  src/sig/falcon/pqclean_\*\_aarch64 : Apache License v2.0
+- `src/sig/ml_dsa/pqcrystals-*`: public domain (CC0) or Apache License v2.0
 - `src/sig/sphincs/pqclean_*`: CC0 (public domain)
 
 ## Acknowledgements
 
-Various companies, including Amazon Web Services, Cisco Systems, evolutionQ, IBM Research, and Microsoft Research have dedicated programmer time to contribute source code to OQS. [Various people](https://github.com/open-quantum-safe/liboqs/blob/main/CONTRIBUTORS) have contributed source code to liboqs.
+The OQS project is supported by the [Post-Quantum Cryptography Alliance](https://pqca.org/) as part of the [Linux Foundation](https://linuxfoundation.org/).
 
-Financial support for the development of Open Quantum Safe has been provided by Amazon Web Services, the Canadian Centre for Cyber Security, the Unitary Fund, the NGI Assure Fund, and VeriSign Inc.
+The OQS project was founded by Douglas Stebila and Michele Mosca at the University of Waterloo.  [Contributors to liboqs](https://github.com/open-quantum-safe/liboqs/blob/main/CONTRIBUTORS) include individual contributors, academics and researchers, and various companies, including Amazon Web Services, Cisco Systems, evolutionQ, IBM Research, Microsoft Research, SandboxAQ, and softwareQ.
+
+Financial support for the development of Open Quantum Safe has been provided by Amazon Web Services, the Canadian Centre for Cyber Security, Cisco, the Unitary Fund, the NGI Assure Fund, and VeriSign Inc.
 
 Research projects which developed specific components of OQS have been supported by various research grants, including funding from the Natural Sciences and Engineering Research Council of Canada (NSERC); see the source papers for funding acknowledgments.

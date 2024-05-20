@@ -22,8 +22,12 @@
 #cmakedefine OQS_USE_AES_OPENSSL 1
 #cmakedefine OQS_USE_SHA2_OPENSSL 1
 #cmakedefine OQS_USE_SHA3_OPENSSL 1
+#cmakedefine OQS_DLOPEN_OPENSSL 1
+#cmakedefine OQS_OPENSSL_CRYPTO_SONAME "@OQS_OPENSSL_CRYPTO_SONAME@"
 
-#cmakedefine OQS_USE_PTHREADS_IN_TESTS 1
+#cmakedefine OQS_EMBEDDED_BUILD 1
+
+#cmakedefine OQS_USE_PTHREADS 1
 
 #cmakedefine OQS_USE_ADX_INSTRUCTIONS 1
 #cmakedefine OQS_USE_AES_INSTRUCTIONS 1
@@ -93,11 +97,8 @@
 
 #cmakedefine OQS_ENABLE_KEM_HQC 1
 #cmakedefine OQS_ENABLE_KEM_hqc_128 1
-#cmakedefine OQS_ENABLE_KEM_hqc_128_avx2 1
 #cmakedefine OQS_ENABLE_KEM_hqc_192 1
-#cmakedefine OQS_ENABLE_KEM_hqc_192_avx2 1
 #cmakedefine OQS_ENABLE_KEM_hqc_256 1
-#cmakedefine OQS_ENABLE_KEM_hqc_256_avx2 1
 
 #cmakedefine OQS_ENABLE_KEM_KYBER 1
 #cmakedefine OQS_ENABLE_KEM_kyber_512 1
@@ -110,6 +111,20 @@
 #cmakedefine OQS_ENABLE_KEM_kyber_1024_avx2 1
 #cmakedefine OQS_ENABLE_KEM_kyber_1024_aarch64 1
 
+#cmakedefine OQS_ENABLE_KEM_ML_KEM 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_512_ipd 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_512 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_512_ipd_avx2 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_512_avx2 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_768_ipd 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_768 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_768_ipd_avx2 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_768_avx2 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_1024_ipd 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_1024 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_1024_ipd_avx2 1
+#cmakedefine OQS_ENABLE_KEM_ml_kem_1024_avx2 1
+
 #cmakedefine OQS_ENABLE_SIG_DILITHIUM 1
 #cmakedefine OQS_ENABLE_SIG_dilithium_2 1
 #cmakedefine OQS_ENABLE_SIG_dilithium_2_avx2 1
@@ -121,11 +136,33 @@
 #cmakedefine OQS_ENABLE_SIG_dilithium_5_avx2 1
 #cmakedefine OQS_ENABLE_SIG_dilithium_5_aarch64 1
 
+#cmakedefine OQS_ENABLE_SIG_ML_DSA 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_44_ipd 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_44 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_44_ipd_avx2 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_44_avx2 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_65_ipd 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_65 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_65_ipd_avx2 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_65_avx2 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_87_ipd 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_87 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_87_ipd_avx2 1
+#cmakedefine OQS_ENABLE_SIG_ml_dsa_87_avx2 1
+
 #cmakedefine OQS_ENABLE_SIG_FALCON 1
 #cmakedefine OQS_ENABLE_SIG_falcon_512 1
 #cmakedefine OQS_ENABLE_SIG_falcon_512_avx2 1
+#cmakedefine OQS_ENABLE_SIG_falcon_512_aarch64 1
 #cmakedefine OQS_ENABLE_SIG_falcon_1024 1
 #cmakedefine OQS_ENABLE_SIG_falcon_1024_avx2 1
+#cmakedefine OQS_ENABLE_SIG_falcon_1024_aarch64 1
+#cmakedefine OQS_ENABLE_SIG_falcon_padded_512 1
+#cmakedefine OQS_ENABLE_SIG_falcon_padded_512_avx2 1
+#cmakedefine OQS_ENABLE_SIG_falcon_padded_512_aarch64 1
+#cmakedefine OQS_ENABLE_SIG_falcon_padded_1024 1
+#cmakedefine OQS_ENABLE_SIG_falcon_padded_1024_avx2 1
+#cmakedefine OQS_ENABLE_SIG_falcon_padded_1024_aarch64 1
 
 #cmakedefine OQS_ENABLE_SIG_SPHINCS 1
 #cmakedefine OQS_ENABLE_SIG_sphincs_sha2_128f_simple 1

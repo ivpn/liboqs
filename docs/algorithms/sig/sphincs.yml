@@ -26,7 +26,7 @@ nist-round: 3
 spec-version: NIST Round 3 submission, v3.1 (June 10, 2022)
 spdx-license-identifier: CC0-1.0
 primary-upstream:
-  source: https://github.com/PQClean/PQClean/commit/66e50172055aaf1b9a16d8f35fe03b0807f2723e
+  source: https://github.com/PQClean/PQClean/commit/8e221ae797b229858a0b0d784577a8cb149d5789
     with copy_from_upstream patches
   spdx-license-identifier: CC0-1.0
   upstream-ancestors:
@@ -47,8 +47,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA2: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -56,6 +56,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA2: liboqs
     no-secret-dependent-branching-claimed: true
@@ -74,8 +77,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA2: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -83,6 +86,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA2: liboqs
     no-secret-dependent-branching-claimed: true
@@ -101,8 +107,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA2: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -110,6 +116,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA2: liboqs
     no-secret-dependent-branching-claimed: true
@@ -128,8 +137,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA2: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -137,6 +146,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA2: liboqs
     no-secret-dependent-branching-claimed: true
@@ -155,8 +167,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA2: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -164,6 +176,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA2: liboqs
     no-secret-dependent-branching-claimed: true
@@ -182,8 +197,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA2: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -191,6 +206,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA2: liboqs
     no-secret-dependent-branching-claimed: true
@@ -209,8 +227,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA3: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -218,6 +236,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -236,8 +257,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA3: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -245,6 +266,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -263,8 +287,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA3: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -272,6 +296,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -290,8 +317,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA3: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -299,6 +326,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -317,8 +347,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA3: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -326,6 +356,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
@@ -344,8 +377,8 @@ parameter-sets:
     supported-platforms: all
     common-crypto:
     - SHA3: liboqs
-    no-secret-dependent-branching-claimed: true
-    no-secret-dependent-branching-checked-by-valgrind: true
+    no-secret-dependent-branching-claimed: false
+    no-secret-dependent-branching-checked-by-valgrind: false
     large-stack-usage: false
   - upstream: primary-upstream
     upstream-id: avx2
@@ -353,6 +386,9 @@ parameter-sets:
     - architecture: x86_64
       required_flags:
       - avx2
+      operating_systems:
+      - Linux
+      - Darwin
     common-crypto:
     - SHA3: liboqs
     no-secret-dependent-branching-claimed: true
