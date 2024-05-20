@@ -50,9 +50,9 @@ fi
 
 # Parse optional parameters
 ABI="armeabi-v7a"
-MINSDKVERSION=21
+MINSDKVERSION=23
 BUILDDIR="build"
-PLATFORM="android-21"
+PLATFORM="android-23"
 MINBUILD="KEM_kyber_1024;"
 
 OPTIND=2
